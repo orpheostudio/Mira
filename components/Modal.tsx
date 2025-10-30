@@ -23,7 +23,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             >
                 <div className="p-5 border-b border-gray-200 flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:bg-gray-100 rounded-full p-2 transition-colors" aria-label="Fechar modal">
+                    <button onClick={onClose} className="text-gray-500 hover:bg-gray-100 rounded-full p-2 transition-all duration-150 transform active:scale-95 active:bg-gray-200" aria-label="Fechar modal">
                         <CloseIcon />
                     </button>
                 </div>

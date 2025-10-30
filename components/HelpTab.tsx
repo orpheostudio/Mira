@@ -6,7 +6,7 @@ interface HelpTabProps {
 }
 
 const QuickAction: React.FC<{ icon: string; title: string; desc: string; onClick: () => void; }> = ({ icon, title, desc, onClick }) => (
-    <button onClick={onClick} className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border border-transparent hover:border-purple-300">
+    <button onClick={onClick} className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all border border-transparent hover:border-purple-300 active:scale-95 active:bg-gray-50 transform duration-150">
         <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-2xl">{icon}</div>
         <div className="font-semibold text-gray-800">{title}</div>
         <p className="text-sm text-gray-500">{desc}</p>

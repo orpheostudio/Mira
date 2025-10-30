@@ -1,13 +1,7 @@
 
 import React from 'react';
-import { HelpIcon, MenuIcon } from './icons';
 
-interface HeaderProps {
-    onHelpClick: () => void;
-    onMenuClick: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onHelpClick, onMenuClick }) => {
+const Header: React.FC = () => {
     return (
         <header className="bg-gradient-to-br from-purple-500 to-purple-800 text-white p-4 sm:p-5 flex items-center justify-between shadow-md sticky top-0 z-20">
             <div className="flex items-center gap-4">
@@ -21,14 +15,6 @@ const Header: React.FC<HeaderProps> = ({ onHelpClick, onMenuClick }) => {
                         <span>Sua amiga virtual</span>
                     </div>
                 </div>
-            </div>
-            <div className="flex gap-2">
-                <button onClick={onHelpClick} className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center" aria-label="Ajuda">
-                    <HelpIcon />
-                </button>
-                <button onClick={onMenuClick} className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center" aria-label="Menu">
-                    <MenuIcon />
-                </button>
             </div>
         </header>
     );

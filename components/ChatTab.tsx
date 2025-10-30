@@ -73,10 +73,10 @@ const ChatTab: React.FC<ChatTabProps> = ({ messages, isLoading, onSendMessage })
                         rows={1}
                         className="flex-1 bg-transparent border-none outline-none resize-none text-base text-gray-800 placeholder-gray-500 px-2 max-h-32"
                     />
-                    <button onClick={() => alert('Recurso de voz em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-colors rounded-full hover:bg-purple-100">
+                    <button onClick={() => alert('Recurso de voz em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-all duration-150 rounded-full hover:bg-purple-100 active:bg-purple-200 transform active:scale-95">
                         <MicIcon />
                     </button>
-                    <button onClick={() => alert('Anexar arquivos em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-colors rounded-full hover:bg-purple-100">
+                    <button onClick={() => alert('Anexar arquivos em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-all duration-150 rounded-full hover:bg-purple-100 active:bg-purple-200 transform active:scale-95">
                         <PaperclipIcon />
                     </button>
                     <button onClick={handleSendMessage} disabled={isLoading || !inputValue.trim()} className="w-11 h-11 bg-purple-600 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95">

@@ -1,5 +1,4 @@
 // This file is now configured to use the Mistral API
-MISTRAL_API_KEY = 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW'
 
 // Interface for Mistral API messages
 interface MistralMessage {

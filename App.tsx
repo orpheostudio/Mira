@@ -16,7 +16,8 @@ const App: React.FC = () => {
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>('chat');
-    const [modals, setModals] = useState<ModalState>({ help: false, menu: false, about: false, privacy: false });
+    const [modals, setModals] = useState<Omit<ModalState, 'help' | 'menu'>>({ about: false, privacy: false });
+    const [chatTabFlash, setChatTabFlash] = useState(0);
 
     const handleSendMessage = async (userMessage: string) => {
         if (activeTab !== 'chat') {
@@ -31,14 +32,15 @@ const App: React.FC = () => {
     
     const handleQuickAction = (userMessage: string) => {
         setActiveTab('chat');
+        setChatTabFlash(prev => prev + 1);
         // Use a short timeout to let the UI update to the chat tab before sending the message
         setTimeout(() => {
             handleSendMessage(userMessage);
         }, 100);
     };
 
-    const openModal = (modalId: keyof ModalState) => setModals(prev => ({ ...prev, [modalId]: true }));
-    const closeModal = (modalId: keyof ModalState) => setModals(prev => ({ ...prev, [modalId]: false }));
+    const openModal = (modalId: keyof typeof modals) => setModals(prev => ({ ...prev, [modalId]: true }));
+    const closeModal = (modalId: keyof typeof modals) => setModals(prev => ({ ...prev, [modalId]: false }));
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -49,7 +51,12 @@ const App: React.FC = () => {
             case 'learn':
                 return <LearnTab />;
             case 'settings':
-                return <SettingsTab />;
+                return <SettingsTab 
+                    onOpenAbout={() => openModal('about')}
+                    onOpenPrivacy={() => openModal('privacy')}
+                    onReportBug={reportBug}
+                    onSendFeedback={sendFeedback}
+                />;
             default:
                 return null;
         }
@@ -61,34 +68,12 @@ const App: React.FC = () => {
 
     return (
         <div className="h-screen w-screen bg-gray-100 flex flex-col max-w-2xl mx-auto shadow-2xl">
-            <Header onHelpClick={() => openModal('help')} onMenuClick={() => openModal('menu')} />
-            <div className="flex-1 flex flex-col overflow-hidden bg-white">
+            <Header />
+            <div key={activeTab} className="flex-1 flex flex-col overflow-hidden bg-white animate-fade-in">
                 {renderTabContent()}
             </div>
-            <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+            <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} chatTabFlash={chatTabFlash} />
             
-            <Modal isOpen={modals.help} onClose={() => closeModal('help')} title="Como posso ajudar?">
-                 <p className="text-gray-600">Estou aqui para tornar a tecnologia mais acessível para você! Posso ajudar com:</p>
-                <ul className="list-disc list-inside my-4 space-y-2 text-gray-600">
-                    <li>Explicações sobre aplicativos e sites</li>
-                    <li>Ajuda com configurações do celular</li>
-                    <li>Dicas de segurança online</li>
-                    <li>Respostas para curiosidades</li>
-                    <li>Acompanhamento em tarefas diárias</li>
-                </ul>
-                <p className="text-gray-600">Não se preocupe se não entender algo - eu repito quantas vezes for necessário! 😊</p>
-            </Modal>
-            
-            <Modal isOpen={modals.menu} onClose={() => closeModal('menu')} title="Menu">
-                <div className="flex flex-col gap-2">
-                    <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => { openModal('about'); closeModal('menu'); }}><span>ℹ️</span> Sobre a Sena</button>
-                    <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => { openModal('privacy'); closeModal('menu'); }}><span>🔒</span> Privacidade</button>
-                    <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => { reportBug(); closeModal('menu'); }}><span>🐞</span> Reportar Problema</button>
-                    <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => { sendFeedback(); closeModal('menu'); }}><span>💬</span> Enviar Feedback</button>
-                    <a href="https://termos.orpheostudio.com.br" target="_blank" rel="noopener noreferrer" className="block w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors"><span>📄</span> Termos de Uso</a>
-                </div>
-            </Modal>
-
              <Modal isOpen={modals.about} onClose={() => closeModal('about')} title="Sobre a Sena">
                 <div className="space-y-4 text-gray-600">
                     <p>Olá! Sou a Sena, uma assistente virtual criada com muito carinho pela AmplaAI.</p>
