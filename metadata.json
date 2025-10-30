@@ -1,0 +1,7 @@
+{
+  "name": "SENA - Sua Amiga Virtual",
+  "description": "SENA is a friendly virtual assistant designed to make technology accessible and simple for everyone, especially those new to the digital world. With a gentle and patient personality, SENA provides clear explanations, helps with daily tasks, and offers a welcoming space for conversation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
