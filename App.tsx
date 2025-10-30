@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Message, TabId, ModalState } from './types';
 import { getSenaResponse } from './services/geminiService';
@@ -8,8 +9,14 @@ import HelpTab from './components/HelpTab';
 import LearnTab from './components/LearnTab';
 import SettingsTab from './components/SettingsTab';
 import Modal from './components/Modal';
+import WelcomeScreen from './components/WelcomeScreen';
 
 const App: React.FC = () => {
+    const [showWelcome, setShowWelcome] = useState(() => {
+        // Mostra a tela de boas-vindas se os termos não foram aceitos
+        return localStorage.getItem('sena_terms_accepted') !== 'true';
+    });
+
     const [messages, setMessages] = useState<Message[]>([
         { role: 'model', text: 'Olá! Eu sou a Sena, sua amiga virtual. 😊 Estou aqui para ajudar você com o que precisar. Pode me perguntar qualquer coisa!' },
         { role: 'model', text: 'Sou especialmente criada para ser paciente e acolhedora. Se tiver dificuldade com tecnologia, fique à vontade que eu explico com calma.' }
@@ -18,6 +25,11 @@ const App: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabId>('chat');
     const [modals, setModals] = useState<Omit<ModalState, 'help' | 'menu'>>({ about: false, privacy: false });
     const [chatTabFlash, setChatTabFlash] = useState(0);
+
+    const handleAcceptTerms = () => {
+        localStorage.setItem('sena_terms_accepted', 'true');
+        setShowWelcome(false);
+    };
 
     const handleSendMessage = async (userMessage: string) => {
         if (activeTab !== 'chat') {
@@ -65,9 +77,12 @@ const App: React.FC = () => {
     const reportBug = () => window.open('mailto:sac.studiotsukiyo@outlook.com?subject=Reportar Bug - SENA', '_blank');
     const sendFeedback = () => window.open('mailto:sac.studiotsukiyo@outlook.com?subject=Feedback - SENA', '_blank');
 
+    if (showWelcome) {
+        return <WelcomeScreen onAccept={handleAcceptTerms} />;
+    }
 
     return (
-        <div className="h-screen w-screen bg-gray-100 flex flex-col max-w-2xl mx-auto shadow-2xl">
+        <div className="h-screen w-screen bg-gray-100 flex flex-col max-w-2xl mx-auto shadow-2xl animate-fade-in">
             <Header />
             <div key={activeTab} className="flex-1 flex flex-col overflow-hidden bg-white animate-fade-in">
                 {renderTabContent()}
