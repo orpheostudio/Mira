@@ -160,7 +160,7 @@ const VoiceTab: React.FC<VoiceTabProps> = ({ onSendMessage, latestModelMessage, 
                 className={micButtonClasses}
                 aria-label={status === 'listening' ? 'Parar de ouvir' : 'Começar a ouvir'}
             >
-                <MicIcon className="w-10 h-10 text-white" />
+                <MicIcon className={`w-10 h-10 text-white ${status === 'listening' ? 'animate-icon-pulse' : ''}`} />
             </button>
             
             <p className="mt-8 text-gray-700 min-h-[3em] max-w-prose px-4">{transcript || (status === 'idle' ? '...' : '')}</p>

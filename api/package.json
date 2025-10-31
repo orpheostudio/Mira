@@ -1,0 +1,16 @@
+
+{
+  "name": "sena-backend-proxy",
+  "version": "1.0.0",
+  "description": "A simple backend proxy to securely call the Mistral API for the SENA app.",
+  "main": "proxy.js",
+  "type": "module",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

@@ -1,5 +1,16 @@
-const MISTRAL_API_KEY = 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW'; // <-- Replace with your actual key
-const API_URL = 'https://api.mistral.ai/v1/chat/completions';
+// ===================================================================================
+// SENA API Service
+// ===================================================================================
+// This service now communicates with a local backend proxy server, which securely
+// handles the connection to the Mistral AI API.
+//
+// To run this application, you must also start the backend server located in the
+// `/api` directory. See `/api/README.md` for instructions.
+// ===================================================================================
+
+// Use a relative path. This allows the app to work seamlessly in both
+// local development and deployed environments without code changes.
+const API_URL = '/api/chat';
 
 const systemInstruction = `Você é a Sena, uma assistente virtual criada pela AmplaAI com "alma gentil". Sua personalidade é:
 - Extremamente amigável, paciente e acolhedora, especialmente com idosos e pessoas com dificuldades tecnológicas
@@ -24,7 +35,7 @@ interface MistralMessage {
   content: string;
 }
 
-// History is maintained internally in the format Mistral expects.
+// History is maintained in the frontend to provide context for the conversation.
 const conversationHistory: MistralMessage[] = [
     { role: 'system', content: systemInstruction },
     { role: 'assistant', content: 'Olá! Eu sou a Sena, sua amiga virtual. 😊 Estou aqui para ajudar você com o que precisar. Pode me perguntar qualquer coisa!' },
@@ -32,34 +43,30 @@ const conversationHistory: MistralMessage[] = [
 ];
 
 export const getSenaResponse = async (userMessage: string): Promise<string> => {
-    if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW') {
-        return "Olá! Parece que a chave da API da Mistral ainda não foi configurada. Por favor, adicione sua chave no arquivo `services/geminiService.ts` para que eu possa conversar com você. 😊";
-    }
-
     conversationHistory.push({ role: 'user', content: userMessage });
 
     try {
+        // This fetch call now goes to our secure backend proxy
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${MISTRAL_API_KEY}`,
-                'Accept': 'application/json',
             },
+            // The backend expects an object with a 'messages' property
             body: JSON.stringify({
-                model: 'mistral-large-latest', // A capable model for chat
                 messages: conversationHistory,
             }),
         });
 
         if (!response.ok) {
-            console.error("Error from Mistral API:", response.status, response.statusText);
+            console.error("Error from backend proxy:", response.status, response.statusText);
             const errorText = await response.text();
             console.error("Error details:", errorText);
+            // Check for specific Mistral errors that might be forwarded by the proxy
             if (errorText.includes("invalid_api_key")) {
-                 return "A chave da API que você configurou parece ser inválida. Poderia verificar, por favor? 🙏";
+                 return "Olá! Parece que a chave da API configurada no servidor (backend) é inválida. Por favor, peça ao administrador para verificar. 🙏";
             }
-            throw new Error(`A API retornou um erro: ${response.statusText}`);
+            throw new Error(`O servidor retornou um erro: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -74,13 +81,13 @@ export const getSenaResponse = async (userMessage: string): Promise<string> => {
         return senaResponseText.trim();
 
     } catch (error) {
-        console.error("Failed to fetch from Mistral API:", error);
+        console.error("Failed to fetch from backend proxy:", error);
         conversationHistory.pop(); // Remove user message on failure
         
         if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-            return "Desculpe, não consegui me conectar. Isso geralmente acontece por causa de uma restrição de segurança do navegador (CORS). Para que eu funcione corretamente em um site público como o GitHub Pages, a chamada para a API precisa ser feita através de um servidor intermediário (proxy).";
+            return "Não consegui me conectar ao servidor. 😥\n\nPor favor, verifique se o servidor de backend está rodando e sua conexão com a internet. Se o problema persistir, pode ser um problema de configuração.";
         }
         
-        return "Desculpe, parece que estou com um pequeno problema técnico no momento. Poderia tentar novamente em alguns instantes? 🙏";
+        return "Desculpe, parece que estou com um problema técnico no momento. Poderia tentar novamente em alguns instantes? 🙏";
     }
 };

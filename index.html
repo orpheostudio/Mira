@@ -8,17 +8,19 @@
     <link rel="apple-touch-icon" href="https://i.imgur.com/lbi4vra.png">
     <meta name="theme-color" content="#7E57C2">
 
-    <-- Google AdSense Script -->
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5941203056187445"
-     crossorigin="anonymous"></script>
+    <!-- Google AdSense Script -->
+    <!-- Substitua 'ca-pub-XXXXXXXXXXXXXXXX' pelo seu ID de editor do AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+         crossorigin="anonymous"></script>
 
-    <-- Microsoft Clarity Script -->
+    <!-- Microsoft Clarity Script -->
+    <!-- Substitua 'YOUR_CLARITY_ID' pelo ID do seu projeto do Clarity -->
     <script type="text/javascript">
         (function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
             t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "tlya8thx8r");
+        })(window, document, "clarity", "script", "YOUR_CLARITY_ID");
     </script>
 
     <style>
@@ -56,6 +58,13 @@
         .animate-message-appear {
             animation: message-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+        @keyframes icon-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-icon-pulse {
+            animation: icon-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 <script type="importmap">
 {
@@ -64,12 +73,14 @@
     "react": "https://aistudiocdn.com/react@19.2.0",
     "@google/genai": "https://aistudiocdn.com/@google/genai@1.28.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@19.2.0/",
-    "react-dom/client": "https://aistudiocdn.com/react-dom@19.2.0/client"
+    "react-dom/client": "https://aistudiocdn.com/react-dom@19.2.0/client",
+    "express": "https://aistudiocdn.com/express@^5.1.0",
+    "cors": "https://aistudiocdn.com/cors@^2.8.5",
+    "dotenv/": "https://aistudiocdn.com/dotenv@^17.2.3/"
   }
 }
 </script>
 </head>
-<meta name="google-adsense-account" content="ca-pub-5941203056187445">
 <body class="bg-gray-100">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
