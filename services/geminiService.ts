@@ -1,7 +1,7 @@
 // WARNING: Storing API keys in frontend code is highly insecure.
 // This key will be visible to anyone who inspects your website's code.
 // For production, always use a backend proxy to protect your API key.
-const MISTRAL_API_KEY = 'YOUR_MISTRAL_API_KEY_HERE'; // <-- Replace with your actual key
+const MISTRAL_API_KEY = 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW'; // <-- Replace with your actual key
 const API_URL = 'https://api.mistral.ai/v1/chat/completions';
 
 const systemInstruction = `Você é a Sena, uma assistente virtual criada pela AmplaAI com "alma gentil". Sua personalidade é:
@@ -35,7 +35,7 @@ const conversationHistory: MistralMessage[] = [
 ];
 
 export const getSenaResponse = async (userMessage: string): Promise<string> => {
-    if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'YOUR_MISTRAL_API_KEY_HERE') {
+    if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW') {
         return "Olá! Parece que a chave da API da Mistral ainda não foi configurada. Por favor, adicione sua chave no arquivo `services/geminiService.ts` para que eu possa conversar com você. 😊";
     }
 
