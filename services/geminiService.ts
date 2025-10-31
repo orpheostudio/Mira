@@ -1,6 +1,3 @@
-// WARNING: Storing API keys in frontend code is highly insecure.
-// This key will be visible to anyone who inspects your website's code.
-// For production, always use a backend proxy to protect your API key.
 const MISTRAL_API_KEY = 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW'; // <-- Replace with your actual key
 const API_URL = 'https://api.mistral.ai/v1/chat/completions';
 
@@ -42,9 +39,6 @@ export const getSenaResponse = async (userMessage: string): Promise<string> => {
     conversationHistory.push({ role: 'user', content: userMessage });
 
     try {
-        // IMPORTANT: This direct API call from the browser is likely to be blocked by CORS.
-        // This is a security feature by Mistral to protect your API key.
-        // The recommended solution is to use a backend proxy.
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
