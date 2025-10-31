@@ -8,13 +8,13 @@ const port = process.env.PORT || 3001;
 
 // --- Middlewares ---
 // Enable CORS for all routes. For production, you should restrict this
-// to your frontend's domain: app.use(cors({ origin: 'https://your-frontend-domain.com' }));
+// to your frontend's domain: app.use(cors({ origin: 'https://sena.orpheostudio.com.br' }));
 app.use(cors());
 app.use(express.json()); // To parse JSON request bodies
 
 // --- Environment Variable Check ---
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'YOUR_MISTRAL_API_KEY_HERE') {
+if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'NFuAj8PYUPcaf6tA1BjbyXuIeSjSA4sW') {
   console.error('FATAL ERROR: MISTRAL_API_KEY is not set in the .env file.');
   console.error('Please create a .env file in the /api directory and add your key.');
   process.exit(1); // Exit if the key is not configured
