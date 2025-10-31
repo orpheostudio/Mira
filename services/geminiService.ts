@@ -83,8 +83,8 @@ const manageHistoryLength = (history: MistralMessage[], maxLength: number = 20):
 };
 
 export const getSenaResponse = async (userMessage: string): Promise<string> => {
-  if (!process.env.API_KEY) {
-    console.error("API_KEY environment variable not set.");
+  if (!process MISTRAL_API_KEY) {
+    console.error("MISTRAL_API_KEY environment variable not set.");
     return "Desculpe, o serviço não está configurado corretamente. A chave da API não foi encontrada. 😔";
   }
 
@@ -113,7 +113,7 @@ export const getSenaResponse = async (userMessage: string): Promise<string> => {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${process.env.API_KEY}`,
+        'Authorization': `Bearer ${MISTRAL_API_KEY}`,
       },
       body: JSON.stringify(requestBody),
       timeout: 30000 // 30 seconds timeout
