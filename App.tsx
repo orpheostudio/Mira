@@ -32,12 +32,17 @@ const App: React.FC = () => {
     };
 
     const handleSendMessage = async (userMessage: string) => {
+        const newUserMessage: Message = { role: 'user', text: userMessage };
+        
         if (activeTab !== 'chat') {
             setActiveTab('chat');
         }
-        setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+        
+        setMessages(prev => [...prev, newUserMessage]);
         setIsLoading(true);
+        
         const senaResponse = await getSenaResponse(userMessage);
+        
         setMessages(prev => [...prev, { role: 'model', text: senaResponse }]);
         setIsLoading(false);
     };
