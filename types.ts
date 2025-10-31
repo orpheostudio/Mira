@@ -4,7 +4,7 @@ export interface Message {
   text: string;
 }
 
-export type TabId = 'chat' | 'help' | 'learn' | 'settings';
+export type TabId = 'chat' | 'help' | 'learn' | 'settings' | 'voice';
 
 export interface ModalState {
   help: boolean;

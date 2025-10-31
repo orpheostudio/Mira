@@ -3,6 +3,14 @@ import { Message } from '../types';
 import TypingIndicator from './TypingIndicator';
 import { SendIcon, MicIcon, PaperclipIcon } from './icons';
 
+// Add SpeechRecognition to the window type for TypeScript
+declare global {
+    interface Window {
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
+    }
+}
+
 interface ChatTabProps {
     messages: Message[];
     isLoading: boolean;
@@ -11,8 +19,68 @@ interface ChatTabProps {
 
 const ChatTab: React.FC<ChatTabProps> = ({ messages, isLoading, onSendMessage }) => {
     const [inputValue, setInputValue] = useState('');
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Effect to initialize Speech Recognition API
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn("Speech Recognition API is not supported in this browser.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'pt-BR';
+        
+        recognition.onstart = () => {
+            setIsListening(true);
+        };
+
+        recognition.onresult = (event: any) => {
+            const transcript = Array.from(event.results)
+                .map((result: any) => result[0])
+                .map((alternative: any) => alternative.transcript)
+                .join('');
+            setInputValue(transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+        };
+        
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
+
+    const handleMicClick = () => {
+        const recognition = recognitionRef.current;
+        if (!recognition) {
+            alert('O reconhecimento de voz não é suportado neste navegador.');
+            return;
+        }
+
+        if (isListening) {
+            recognition.stop();
+        } else {
+            setInputValue(''); // Clear previous input before starting a new recording
+            recognition.start();
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,7 +121,11 @@ const ChatTab: React.FC<ChatTabProps> = ({ messages, isLoading, onSendMessage })
                             </div>
                         </div>
                     ))}
-                    {isLoading && <TypingIndicator />}
+                    {isLoading && (
+                        <div className="animate-message-appear">
+                            <TypingIndicator />
+                        </div>
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
             </main>
@@ -69,11 +141,14 @@ const ChatTab: React.FC<ChatTabProps> = ({ messages, isLoading, onSendMessage })
                                 handleSendMessage();
                             }
                         }}
-                        placeholder="Digite sua mensagem..."
+                        placeholder={isListening ? "Ouvindo..." : "Digite sua mensagem..."}
                         rows={1}
-                        className="flex-1 bg-transparent border-none outline-none resize-none text-base text-gray-800 placeholder-gray-500 px-2 max-h-32"
+                        className="flex-1 bg-transparent border-none outline-none resize-none text-base text-gray-800 placeholder-gray-500 px-2 max-h-32 transition-all duration-200"
                     />
-                    <button onClick={() => alert('Recurso de voz em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-all duration-150 rounded-full hover:bg-purple-100 active:bg-purple-200 transform active:scale-95">
+                    <button 
+                        onClick={handleMicClick} 
+                        className={`p-2 transition-all duration-150 rounded-full transform active:scale-95 ${isListening ? 'text-white bg-red-500 animate-pulse' : 'text-gray-500 hover:text-purple-600 hover:bg-purple-100 active:bg-purple-200'}`}
+                    >
                         <MicIcon />
                     </button>
                     <button onClick={() => alert('Anexar arquivos em desenvolvimento!')} className="p-2 text-gray-500 hover:text-purple-600 transition-all duration-150 rounded-full hover:bg-purple-100 active:bg-purple-200 transform active:scale-95">

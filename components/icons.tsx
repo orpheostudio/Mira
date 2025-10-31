@@ -19,8 +19,8 @@ export const SendIcon = () => (
     </svg>
 );
 
-export const MicIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+export const MicIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 6v3m0 0h-3m3 0h3M10 3a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1h-2a1 1 0 01-1-1V3z" />
     </svg>
 );
@@ -32,6 +32,7 @@ export const PaperclipIcon = () => (
 );
 
 export const ChatIcon = () => <span>💬</span>;
+export const VoiceTabIcon = () => <span>🎙️</span>;
 export const HelpToolIcon = () => <span>🛠️</span>;
 export const LearnIcon = () => <span>📚</span>;
 export const SettingsIcon = () => <span>⚙️</span>;

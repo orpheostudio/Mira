@@ -1,6 +1,8 @@
-import { Message } from '../types';
-
-const API_PROXY_ENDPOINT = '/api/proxy'; // Endpoint do seu servidor que chamará a Mistral
+// WARNING: Storing API keys in frontend code is highly insecure.
+// This key will be visible to anyone who inspects your website's code.
+// For production, always use a backend proxy to protect your API key.
+const MISTRAL_API_KEY = 'YOUR_MISTRAL_API_KEY_HERE'; // <-- Replace with your actual key
+const API_URL = 'https://api.mistral.ai/v1/chat/completions';
 
 const systemInstruction = `Você é a Sena, uma assistente virtual criada pela AmplaAI com "alma gentil". Sua personalidade é:
 - Extremamente amigável, paciente e acolhedora, especialmente com idosos e pessoas com dificuldades tecnológicas
@@ -19,56 +21,72 @@ Diretrizes importantes:
 - Evite respostas muito longas, divida informações complexas em partes
 - Mostre interesse genuíno pelo bem-estar do usuário`;
 
-// Mantemos o histórico da conversa no frontend para enviar ao backend
-let conversationHistory: Message[] = [
-    { 
-        role: 'model', 
-        text: 'Olá! Eu sou a Sena, sua amiga virtual. 😊 Estou aqui para ajudar você com o que precisar. Pode me perguntar qualquer coisa!' 
-    },
-    { 
-        role: 'model', 
-        text: 'Sou especialmente criada para ser paciente e acolhedora. Se tiver dificuldade com tecnologia, fique à vontade que eu explico com calma.'
-    }
+// Define the shape for Mistral API messages
+interface MistralMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+// History is maintained internally in the format Mistral expects.
+const conversationHistory: MistralMessage[] = [
+    { role: 'system', content: systemInstruction },
+    { role: 'assistant', content: 'Olá! Eu sou a Sena, sua amiga virtual. 😊 Estou aqui para ajudar você com o que precisar. Pode me perguntar qualquer coisa!' },
+    { role: 'assistant', content: 'Sou especialmente criada para ser paciente e acolhedora. Se tiver dificuldade com tecnologia, fique à vontade que eu explico com calma.' }
 ];
 
 export const getSenaResponse = async (userMessage: string): Promise<string> => {
-    // Adiciona a nova mensagem do usuário ao histórico
-    conversationHistory.push({ role: 'user', text: userMessage });
+    if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'YOUR_MISTRAL_API_KEY_HERE') {
+        return "Olá! Parece que a chave da API da Mistral ainda não foi configurada. Por favor, adicione sua chave no arquivo `services/geminiService.ts` para que eu possa conversar com você. 😊";
+    }
+
+    conversationHistory.push({ role: 'user', content: userMessage });
 
     try {
-        // O frontend envia a mensagem do usuário e o histórico para o seu backend
-        const response = await fetch(API_PROXY_ENDPOINT, {
+        // IMPORTANT: This direct API call from the browser is likely to be blocked by CORS.
+        // This is a security feature by Mistral to protect your API key.
+        // The recommended solution is to use a backend proxy.
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+                'Accept': 'application/json',
             },
             body: JSON.stringify({
-                systemPrompt: systemInstruction,
-                history: conversationHistory
+                model: 'mistral-large-latest', // A capable model for chat
+                messages: conversationHistory,
             }),
         });
 
         if (!response.ok) {
-            console.error("Error from backend proxy:", response.statusText);
-            throw new Error('Falha na comunicação com o servidor.');
+            console.error("Error from Mistral API:", response.status, response.statusText);
+            const errorText = await response.text();
+            console.error("Error details:", errorText);
+            if (errorText.includes("invalid_api_key")) {
+                 return "A chave da API que você configurou parece ser inválida. Poderia verificar, por favor? 🙏";
+            }
+            throw new Error(`A API retornou um erro: ${response.statusText}`);
         }
 
         const data = await response.json();
-        const senaResponseText = data.text;
+        const senaResponseText = data.choices?.[0]?.message?.content;
 
         if (!senaResponseText) {
-             throw new Error("Resposta do servidor está em um formato inválido.");
+            throw new Error("A resposta da API não continha o texto esperado.");
         }
 
-        // Adiciona a resposta da Sena ao histórico
-        conversationHistory.push({ role: 'model', text: senaResponseText });
+        conversationHistory.push({ role: 'assistant', content: senaResponseText });
         
-        return senaResponseText;
+        return senaResponseText.trim();
 
     } catch (error) {
-        console.error("Error calling backend proxy:", error);
-        // Remove a última mensagem do usuário do histórico se a chamada falhar
-        conversationHistory.pop();
+        console.error("Failed to fetch from Mistral API:", error);
+        conversationHistory.pop(); // Remove user message on failure
+        
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+            return "Desculpe, não consegui me conectar. Isso geralmente acontece por causa de uma restrição de segurança do navegador (CORS). Para que eu funcione corretamente em um site público como o GitHub Pages, a chamada para a API precisa ser feita através de um servidor intermediário (proxy).";
+        }
+        
         return "Desculpe, parece que estou com um pequeno problema técnico no momento. Poderia tentar novamente em alguns instantes? 🙏";
     }
 };

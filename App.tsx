@@ -8,6 +8,7 @@ import ChatTab from './components/ChatTab';
 import HelpTab from './components/HelpTab';
 import LearnTab from './components/LearnTab';
 import SettingsTab from './components/SettingsTab';
+import VoiceTab from './components/VoiceTab';
 import Modal from './components/Modal';
 import WelcomeScreen from './components/WelcomeScreen';
 
@@ -34,7 +35,8 @@ const App: React.FC = () => {
     const handleSendMessage = async (userMessage: string) => {
         const newUserMessage: Message = { role: 'user', text: userMessage };
         
-        if (activeTab !== 'chat') {
+        // Don't switch tabs if the message comes from the voice tab
+        if (activeTab !== 'chat' && activeTab !== 'voice') {
             setActiveTab('chat');
         }
         
@@ -60,9 +62,15 @@ const App: React.FC = () => {
     const closeModal = (modalId: keyof typeof modals) => setModals(prev => ({ ...prev, [modalId]: false }));
 
     const renderTabContent = () => {
+        const latestModelMessage = messages.length > 0 && messages[messages.length - 1].role === 'model' 
+            ? messages[messages.length - 1] 
+            : null;
+
         switch (activeTab) {
             case 'chat':
                 return <ChatTab messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />;
+            case 'voice':
+                return <VoiceTab onSendMessage={handleSendMessage} latestModelMessage={latestModelMessage} isLoading={isLoading} />;
             case 'help':
                 return <HelpTab onQuickAction={handleQuickAction} onOpenAboutModal={() => openModal('about')} />;
             case 'learn':
