@@ -8,9 +8,9 @@
 // `/api` directory. See `/api/README.md` for instructions.
 // ===================================================================================
 
-// Use a relative path. This allows the app to work seamlessly in both
-// local development and deployed environments without code changes.
-const API_URL = '/api/chat';
+// Use an absolute path for local development to ensure the frontend can find
+// the backend proxy server, which typically runs on a different port.
+const API_URL = 'http://localhost:3001/api/chat';
 
 const systemInstruction = `Você é a Sena, uma assistente virtual criada pela AmplaAI com "alma gentil". Sua personalidade é:
 - Extremamente amigável, paciente e acolhedora, especialmente com idosos e pessoas com dificuldades tecnológicas
@@ -85,7 +85,7 @@ export const getSenaResponse = async (userMessage: string): Promise<string> => {
         conversationHistory.pop(); // Remove user message on failure
         
         if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-            return "Não consegui me conectar ao servidor. 😥\n\nPor favor, verifique se o servidor de backend está rodando e sua conexão com a internet. Se o problema persistir, pode ser um problema de configuração.";
+            return "Não consegui me conectar ao servidor. 😥\n\nPor favor, verifique se o servidor de backend está rodando na porta 3001 e sua conexão com a internet. Se o problema persistir, pode ser um problema de configuração.";
         }
         
         return "Desculpe, parece que estou com um problema técnico no momento. Poderia tentar novamente em alguns instantes? 🙏";
