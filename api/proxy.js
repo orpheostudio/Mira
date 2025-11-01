@@ -8,7 +8,7 @@ const port = process.env.PORT || 3001;
 
 // --- Middlewares ---
 // Enable CORS for all routes. For production, you should restrict this
-to your frontend's domain: app.use(cors({ origin: 'https://sena.orpheostudio.com.br'}));
+to your frontend's domain: app.use(cors({ origin: 'https://sena.orpheostudio.com.br'})) ;
 app.use(cors());
 app.use(express.json()); // To parse JSON request bodies
 
