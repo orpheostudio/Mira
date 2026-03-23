@@ -1,438 +1,1229 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pesquisa de Satisfação · Claudinei AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --navy: #1B3A5C;
-      --navy-dark: #0f2338;
-      --navy-mid: #234a76;
-      --gold: #C4973A;
-      --gold-light: #d9b060;
-      --gold-pale: #f0d898;
-      --paper: #F7F4EE;
-      --paper-dark: #ede9e0;
-      --text: #1a1a2e;
-      --text-muted: #5a6a7e;
-    }
+import { useState, useEffect, useRef } from "react";
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap');
 
-    html { scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: 'Instrument Sans', sans-serif;
-      background: var(--navy-dark);
-      color: var(--paper);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+:root {
+  --night: #080609;
+  --night2: #0f0b10;
+  --night3: #181320;
+  --sakura: #e8607a;
+  --sakura2: #f092a5;
+  --sakura3: #fcd0d8;
+  --sakura-glow: rgba(232,96,122,0.15);
+  --sakura-glow2: rgba(232,96,122,0.06);
+  --white: #fdf4f6;
+  --white2: #f0e0e4;
+  --muted: #7a6068;
+  --muted2: #4a3840;
+  --border: rgba(232,96,122,0.18);
+  --border2: rgba(232,96,122,0.08);
+  --font-display: 'Shippori Mincho', serif;
+  --font-body: 'Cormorant Garamond', serif;
+  --font-ui: 'Zen Kaku Gothic New', sans-serif;
+}
 
-    /* ─── BACKGROUND ─────────────────────────────────── */
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(196,151,58,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 90%, rgba(27,58,92,0.6) 0%, transparent 70%),
-        linear-gradient(160deg, #0a1829 0%, #0f2338 40%, #152d4a 100%);
-    }
+html { scroll-behavior: smooth; }
 
-    .noise {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 200px;
-      pointer-events: none;
-    }
+body {
+  background: var(--night);
+  color: var(--white);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  cursor: default;
+}
 
-    .content-wrap {
-      position: relative;
-      z-index: 2;
-    }
+/* ── PETALS ── */
+.petal-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
 
-    /* ─── HERO ────────────────────────────────────────── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 60px 24px 0;
-      animation: fadeUp 0.9s ease both;
-    }
+.petal {
+  position: absolute;
+  top: -60px;
+  font-size: 16px;
+  opacity: 0;
+  animation: fall linear infinite;
+  filter: blur(0.3px);
+  user-select: none;
+}
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+@keyframes fall {
+  0%   { transform: translateY(0) rotate(0deg) translateX(0); opacity: 0; }
+  5%   { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(110vh) rotate(540deg) translateX(80px); opacity: 0; }
+}
 
-    .cover-wrapper {
-      width: 100%;
-      max-width: 720px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(196,151,58,0.2),
-        0 24px 80px rgba(0,0,0,0.55),
-        0 0 60px rgba(196,151,58,0.06);
-      animation: fadeUp 1s 0.15s ease both;
-      position: relative;
-    }
+/* ── NAV ── */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.4s;
+}
 
-    .cover-wrapper img {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-    }
+.nav.scrolled {
+  background: rgba(8,6,9,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border2);
+  padding: 14px 48px;
+}
 
-    .cover-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, transparent 55%, rgba(10,24,41,0.85) 100%);
-    }
+.nav-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
 
-    /* ─── INTRO TEXT ─────────────────────────────────── */
-    .intro {
-      max-width: 640px;
-      margin: 48px auto 0;
-      padding: 0 24px;
-      animation: fadeUp 1s 0.3s ease both;
-    }
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.04em;
+}
 
-    .eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 16px;
-    }
+.logo-kanji {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--sakura);
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
 
-    .intro h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.2rem, 5vw, 3.4rem);
-      font-weight: 300;
-      line-height: 1.15;
-      color: var(--paper);
-      margin-bottom: 20px;
-    }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
 
-    .intro h1 em {
-      font-style: italic;
-      color: var(--gold-light);
-    }
+.nav-link {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white2);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
 
-    .intro p {
-      font-size: 1rem;
-      line-height: 1.75;
-      color: rgba(247,244,238,0.72);
-      font-weight: 300;
-    }
+.nav-link:hover { opacity: 1; color: var(--sakura2); }
 
-    /* ─── DIVIDER ─────────────────────────────────────── */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      max-width: 640px;
-      margin: 44px auto 0;
-      padding: 0 24px;
-      animation: fadeUp 1s 0.45s ease both;
-    }
+.nav-cta {
+  background: transparent;
+  border: 1px solid var(--sakura);
+  color: var(--sakura);
+  padding: 8px 22px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
 
-    .divider-line {
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(196,151,58,0.35), transparent);
-    }
+.nav-cta:hover {
+  background: var(--sakura);
+  color: var(--night);
+  box-shadow: 0 0 24px var(--sakura-glow);
+}
 
-    .divider-gem {
-      width: 8px;
-      height: 8px;
-      background: var(--gold);
-      transform: rotate(45deg);
-      flex-shrink: 0;
-      box-shadow: 0 0 12px rgba(196,151,58,0.5);
-    }
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 24px 60px;
+  overflow: hidden;
+  z-index: 1;
+}
 
-    /* ─── STATS STRIP ────────────────────────────────── */
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 0;
-      max-width: 640px;
-      margin: 40px auto 0;
-      padding: 0 24px;
-      animation: fadeUp 1s 0.5s ease both;
-    }
+.hero-bg-kanji {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: clamp(280px, 42vw, 600px);
+  font-weight: 800;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(232,96,122,0.07);
+  line-height: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  letter-spacing: -0.05em;
+}
 
-    .stat {
-      flex: 1;
-      text-align: center;
-      padding: 24px 16px;
-      border: 1px solid rgba(196,151,58,0.12);
-      border-right: none;
-      background: rgba(27,58,92,0.15);
-      backdrop-filter: blur(8px);
-    }
+.hero-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,96,122,0.1) 0%, transparent 65%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 
-    .stat:first-child { border-radius: 12px 0 0 12px; }
-    .stat:last-child  { border-radius: 0 12px 12px 0; border-right: 1px solid rgba(196,151,58,0.12); }
+.hero-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sakura);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: riseIn 0.8s ease 0.2s forwards;
+}
 
-    .stat-number {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--gold-light);
-      line-height: 1;
-      margin-bottom: 6px;
-    }
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: '──';
+  margin: 0 12px;
+  opacity: 0.4;
+  letter-spacing: -0.1em;
+}
 
-    .stat-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(247,244,238,0.45);
-      font-family: 'DM Mono', monospace;
-    }
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 13vw, 168px);
+  font-weight: 800;
+  line-height: 0.9;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: riseIn 1s ease 0.4s forwards;
+}
 
-    /* ─── FORM SECTION ───────────────────────────────── */
-    .form-section {
-      max-width: 760px;
-      margin: 56px auto 0;
-      padding: 0 16px;
-      animation: fadeUp 1s 0.6s ease both;
-    }
+.hero-title-accent {
+  color: var(--sakura);
+  display: block;
+}
 
-    .form-card {
-      background: rgba(15, 35, 56, 0.6);
-      border: 1px solid rgba(196,151,58,0.18);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(196,151,58,0.06) inset,
-        0 32px 80px rgba(0,0,0,0.4);
-      backdrop-filter: blur(16px);
-    }
+.hero-kanji-inline {
+  font-size: 0.55em;
+  color: var(--sakura);
+  opacity: 0.7;
+  vertical-align: super;
+  margin-left: 8px;
+  font-weight: 400;
+}
 
-    .form-header {
-      padding: 28px 32px;
-      border-bottom: 1px solid rgba(196,151,58,0.12);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: rgba(27,58,92,0.2);
-    }
+.hero-subtitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 16px;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: riseIn 0.8s ease 0.6s forwards;
+}
 
-    .form-header-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-pale));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 1.2rem;
-    }
+.hero-desc {
+  font-family: var(--font-body);
+  font-size: clamp(16px, 2vw, 20px);
+  font-style: italic;
+  font-weight: 300;
+  color: var(--white2);
+  opacity: 0.7;
+  max-width: 520px;
+  line-height: 1.8;
+  margin-top: 32px;
+  position: relative;
+  z-index: 2;
+  animation: riseIn 0.8s ease 0.8s forwards;
+  opacity: 0;
+}
 
-    .form-header-text h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.35rem;
-      font-weight: 400;
-      color: var(--paper);
-    }
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 44px;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: riseIn 0.8s ease 1s forwards;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
-    .form-header-text p {
-      font-size: 0.78rem;
-      color: rgba(247,244,238,0.5);
-      font-family: 'DM Mono', monospace;
-      margin-top: 3px;
-    }
+.btn-primary {
+  background: var(--sakura);
+  color: var(--night);
+  border: none;
+  padding: 14px 36px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
 
-    .form-body {
-      padding: 0;
-      background: var(--paper);
-      border-radius: 0 0 20px 20px;
-      overflow: hidden;
-    }
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
 
-    .form-body iframe {
-      display: block;
-      width: 100%;
-      border: none;
-      background: var(--paper);
-    }
+.btn-primary:hover::before { transform: translateX(100%); }
 
-    /* ─── FOOTER ─────────────────────────────────────── */
-    .footer {
-      text-align: center;
-      padding: 60px 24px 48px;
-      animation: fadeUp 1s 0.75s ease both;
-    }
+.btn-primary:hover {
+  box-shadow: 0 8px 32px rgba(232,96,122,0.4);
+  transform: translateY(-2px);
+}
 
-    .footer-logo {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 300;
-      color: rgba(247,244,238,0.35);
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
-    }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(253,244,246,0.2);
+  color: var(--white2);
+  padding: 14px 36px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
 
-    .footer-logo span { color: var(--gold); }
+.btn-ghost:hover {
+  border-color: var(--sakura);
+  color: var(--sakura);
+}
 
-    .footer p {
-      font-size: 0.72rem;
-      color: rgba(247,244,238,0.22);
-      font-family: 'DM Mono', monospace;
-      letter-spacing: 0.05em;
-    }
+.hero-scroll {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+  opacity: 0;
+  animation: riseIn 0.8s ease 1.4s forwards;
+}
 
-    /* ─── FLOATING PARTICLES ─────────────────────────── */
-    .particles {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
+.scroll-line {
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(to bottom, var(--sakura), transparent);
+  animation: scrollPulse 2s ease infinite;
+}
 
-    .particle {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      border-radius: 50%;
-      background: var(--gold);
-      opacity: 0;
-      animation: floatUp var(--dur, 8s) var(--delay, 0s) linear infinite;
-    }
+.scroll-text {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
-    @keyframes floatUp {
-      0%   { opacity: 0; transform: translateY(100vh) scale(0.5); }
-      10%  { opacity: 0.4; }
-      90%  { opacity: 0.15; }
-      100% { opacity: 0; transform: translateY(-10vh) scale(1); }
-    }
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.4; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.1); }
+}
 
-    /* ─── RESPONSIVE ─────────────────────────────────── */
-    @media (max-width: 600px) {
-      .form-header { padding: 20px 20px; }
-      .stats { gap: 0; }
-      .stat-number { font-size: 1.5rem; }
-      .form-body iframe { height: 3200px; }
-    }
-  </style>
-</head>
-<body>
+/* ── DIVIDER ── */
+.divider-sakura {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 48px;
+  margin: 0 auto;
+  max-width: 900px;
+}
 
-<div class="bg-layer"></div>
-<div class="noise"></div>
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
 
-<!-- Particles -->
-<div class="particles" id="particles"></div>
+.divider-icon {
+  font-size: 14px;
+  opacity: 0.5;
+}
 
-<div class="content-wrap">
+/* ── STATS ── */
+.stats-section {
+  position: relative;
+  z-index: 1;
+  padding: 60px 48px;
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+}
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="cover-wrapper">
-      <img src="https://i.imgur.com/0lRG1Lx.jpeg" alt="Claudinei AI — Pesquisa de Satisfação" />
-      <div class="cover-overlay"></div>
-    </div>
-  </section>
+.stat-item {
+  background: var(--night2);
+  padding: 36px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
 
-  <!-- INTRO -->
-  <div class="intro">
-    <p class="eyebrow">✦ Pesquisa de Satisfação · 2025</p>
-    <h1>Ajude a moldar o <em>futuro</em> do Claudinei</h1>
-    <p>
-Estamos desenvolvendo uma nova experiência de inteligência artificial e queremos entender melhor o que as pessoas realmente esperam de uma IA.
-</p>
+.stat-item:hover { background: var(--night3); }
 
-<p>
-Sua opinião é extremamente importante e vai ajudar diretamente na evolução do projeto.
-</p>
+.stat-item::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sakura), transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s;
+}
 
-<p>
-O formulário leva menos de <strong>2 minutos</strong> para ser respondido.
-</p>
-  </div>
+.stat-item:hover::before { transform: scaleX(1); }
 
-  <!-- DIVIDER -->
-  <div class="divider">
-    <div class="divider-line"></div>
-    <div class="divider-gem"></div>
-    <div class="divider-line"></div>
-  </div>
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 8px;
+}
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-number">~3'</div>
-      <div class="stat-label">para responder</div>
-    </div>
-    <div class="stat">
-      <div class="stat-number">100%</div>
-      <div class="stat-label">anônimo</div>
-    </div>
-    <div class="stat">
-      <div class="stat-number">+IA</div>
-      <div class="stat-label">melhor pra você</div>
-    </div>
-  </div>
+.stat-num span { color: var(--sakura); }
 
-  <!-- FORM -->
-  <div class="form-section">
-    <div class="form-card">
-      <div class="form-header">
-        <div class="form-header-icon">📋</div>
-        <div class="form-header-text">
-          <h2>Formulário de Pesquisa</h2>
-          <p>Claudinei AI · Telos AI © 2025</p>
+.stat-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-jp {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--sakura);
+  opacity: 0.4;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ── FEATURES ── */
+.features-section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.section-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sakura);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.section-title em {
+  font-style: italic;
+  color: var(--sakura2);
+}
+
+.section-body {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+}
+
+.feature-card {
+  background: var(--night2);
+  padding: 40px 32px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  cursor: default;
+}
+
+.feature-card:hover { background: var(--night3); }
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sakura-glow), transparent);
+  transform: scaleX(0);
+  transition: transform 0.5s;
+}
+
+.feature-card:hover::after { transform: scaleX(1); }
+
+.feature-icon {
+  font-size: 28px;
+  margin-bottom: 20px;
+  display: block;
+  filter: saturate(0.7);
+}
+
+.feature-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.feature-jp {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--sakura);
+  opacity: 0.5;
+  margin-bottom: 14px;
+  display: block;
+  letter-spacing: 0.1em;
+}
+
+.feature-desc {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.feature-num {
+  position: absolute;
+  top: 28px; right: 28px;
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 800;
+  color: var(--sakura);
+  opacity: 0.04;
+  line-height: 1;
+  transition: opacity 0.3s;
+}
+
+.feature-card:hover .feature-num { opacity: 0.08; }
+
+/* ── QUOTE SECTION ── */
+.quote-section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 48px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.quote-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(232,96,122,0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.quote-mark {
+  font-family: var(--font-display);
+  font-size: 120px;
+  color: var(--sakura);
+  opacity: 0.12;
+  line-height: 0.6;
+  display: block;
+  margin-bottom: -20px;
+}
+
+.quote-text {
+  font-family: var(--font-body);
+  font-size: clamp(24px, 4vw, 40px);
+  font-style: italic;
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1.6;
+  max-width: 780px;
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-text em { color: var(--sakura2); font-style: normal; }
+
+.quote-source {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HOW IT WORKS ── */
+.how-section {
+  position: relative;
+  z-index: 1;
+  padding: 80px 48px 100px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 40px; bottom: 40px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--sakura), rgba(232,96,122,0.1));
+}
+
+.step {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--border2);
+  transition: all 0.2s;
+}
+
+.step:last-child { border-bottom: none; }
+
+.step:hover .step-num { background: var(--sakura); color: var(--night); }
+
+.step-num {
+  width: 62px; height: 62px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sakura);
+  flex-shrink: 0;
+  transition: all 0.3s;
+  background: var(--night2);
+  z-index: 1;
+}
+
+.step-content { flex: 1; padding-top: 12px; }
+
+.step-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.step-desc {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.step-tag {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sakura);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  opacity: 0.7;
+}
+
+/* ── COMMUNITY PREVIEW ── */
+.community-section {
+  position: relative;
+  z-index: 1;
+  padding: 80px 0;
+  overflow: hidden;
+}
+
+.communities-track {
+  display: flex;
+  gap: 16px;
+  padding: 0 48px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.communities-track::-webkit-scrollbar { display: none; }
+
+.community-card {
+  flex-shrink: 0;
+  width: 220px;
+  border: 1px solid var(--border2);
+  background: var(--night2);
+  padding: 28px 22px;
+  scroll-snap-align: start;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.community-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--sakura-glow2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.community-card:hover { border-color: var(--border); transform: translateY(-4px); }
+.community-card:hover::before { opacity: 1; }
+
+.community-emoji {
+  font-size: 32px;
+  margin-bottom: 14px;
+  display: block;
+  filter: saturate(0.8);
+}
+
+.community-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.community-count {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: var(--sakura);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.community-desc {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* ── CTA FINAL ── */
+.cta-section {
+  position: relative;
+  z-index: 1;
+  padding: 120px 48px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.cta-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(232,96,122,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 50%, rgba(232,96,122,0.06) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.cta-border {
+  max-width: 700px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  padding: 72px 64px;
+  position: relative;
+}
+
+.cta-border::before,
+.cta-border::after {
+  content: '書';
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: 800;
+  color: var(--sakura);
+  opacity: 0.04;
+  line-height: 1;
+}
+
+.cta-border::before { top: -20px; left: 20px; }
+.cta-border::after { bottom: -20px; right: 20px; }
+
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+
+.cta-title em { color: var(--sakura); font-style: italic; }
+
+.cta-body {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 40px;
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-input-row {
+  display: flex;
+  gap: 0;
+  max-width: 420px;
+  margin: 0 auto 16px;
+}
+
+.cta-input {
+  flex: 1;
+  background: var(--night3);
+  border: 1px solid var(--border);
+  border-right: none;
+  padding: 13px 18px;
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cta-input::placeholder { color: var(--muted2); }
+.cta-input:focus { border-color: var(--sakura); }
+
+.cta-btn {
+  background: var(--sakura);
+  border: 1px solid var(--sakura);
+  color: var(--night);
+  padding: 13px 28px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+
+.cta-btn:hover {
+  background: var(--sakura2);
+  box-shadow: 0 0 24px var(--sakura-glow);
+}
+
+.cta-note {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--muted2);
+}
+
+/* ── FOOTER ── */
+.footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border2);
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.footer-logo span { color: var(--sakura); font-size: 12px; margin-left: 8px; opacity: 0.6; }
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-link {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s;
+  text-transform: uppercase;
+}
+
+.footer-link:hover { color: var(--sakura2); }
+
+.footer-copy {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav { padding: 16px 20px; }
+  .nav.scrolled { padding: 12px 20px; }
+  .nav-links { display: none; }
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-section { grid-template-columns: 1fr; padding: 40px 20px; }
+  .hero { padding: 100px 20px 60px; }
+  .features-section, .how-section, .quote-section { padding: 60px 20px; }
+  .cta-section { padding: 80px 20px; }
+  .cta-border { padding: 48px 28px; }
+  .footer { padding: 28px 20px; flex-direction: column; text-align: center; }
+  .steps::before { display: none; }
+  .cta-input-row { flex-direction: column; }
+  .cta-input { border-right: 1px solid var(--border); border-bottom: none; }
+}
+`;
+
+const PETALS = ["🌸", "🌸", "🌸", "✿", "❀", "🌸"];
+
+const COMMUNITIES = [
+  { emoji: "🌙", name: "Poesia Noturna", count: "1.204 escritores", desc: "Versos nascidos depois da meia-noite." },
+  { emoji: "🗡️", name: "Fantasia & Magia", count: "3.891 escritores", desc: "Mundos construídos palavra por palavra." },
+  { emoji: "🖤", name: "Contos Sombrios", count: "2.107 escritores", desc: "Onde o escuro encontra a beleza." },
+  { emoji: "🌸", name: "Romance Oriental", count: "4.320 escritores", desc: "Histórias de amor com alma japonesa." },
+  { emoji: "📡", name: "Ficção Científica", count: "1.756 escritores", desc: "O futuro como tela em branco." },
+  { emoji: "✒️", name: "Crônicas & Prosa", count: "987 escritores", desc: "O cotidiano elevado à literatura." },
+  { emoji: "🎭", name: "Drama & Teatro", count: "643 escritores", desc: "Palavras feitas para serem sentidas." },
+];
+
+export default function KakuLanding() {
+  const [scrolled, setScrolled] = useState(false);
+  const [email, setEmail] = useState("");
+  const [joined, setJoined] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const petalEls = Array.from({ length: 18 }, (_, i) => {
+    const left = Math.random() * 100;
+    const delay = Math.random() * 12;
+    const duration = 8 + Math.random() * 8;
+    const size = 10 + Math.random() * 10;
+    const emoji = PETALS[Math.floor(Math.random() * PETALS.length)];
+    return (
+      <div
+        key={i}
+        className="petal"
+        style={{
+          left: `${left}%`,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+          fontSize: `${size}px`,
+          opacity: 0,
+        }}
+      >{emoji}</div>
+    );
+  });
+
+  return (
+    <>
+      <style>{CSS}</style>
+
+      {/* Petals */}
+      <div className="petal-canvas">{petalEls}</div>
+
+      {/* NAV */}
+      <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
+        <div className="nav-logo">
+          <span className="logo-text">Kaku</span>
+          <span className="logo-kanji">書く</span>
+        </div>
+        <div className="nav-links">
+          <a className="nav-link">Comunidades</a>
+          <a className="nav-link">Sobre</a>
+          <a className="nav-link">Escritores</a>
+        </div>
+        <button className="nav-cta">Entrar</button>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-bg-kanji">書</div>
+        <div className="hero-glow" />
+        <span className="hero-eyebrow">comunidade de escritores</span>
+        <h1 className="hero-title">
+          Kaku
+          <span className="hero-title-accent">書く<span className="hero-kanji-inline">escrever</span></span>
+        </h1>
+        <p className="hero-subtitle">onde cada palavra encontra seu leitor</p>
+        <p className="hero-desc">
+          Uma rede feita para escritores que levam suas histórias a sério —
+          e para leitores que sabem que certas palavras mudam tudo.
+        </p>
+        <div className="hero-actions">
+          <button className="btn-primary">Começar a escrever</button>
+          <button className="btn-ghost">Explorar comunidades</button>
+        </div>
+        <div className="hero-scroll">
+          <div className="scroll-line" />
+          <span className="scroll-text">Rolar</span>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <div style={{padding:"0 48px", maxWidth:900+96, margin:"0 auto"}}>
+        <div className="divider-sakura">
+          <div className="divider-line" />
+          <span className="divider-icon">🌸</span>
+          <div className="divider-line" />
         </div>
       </div>
-      <div class="form-body">
-        <iframe
-          src="https://docs.google.com/forms/d/e/1FAIpQLScWttQt_WdhSWutQuCNCOd3Z5FCH-UdG354VE5FvxjDDuMBVg/viewform?embedded=true"
-          width="100%"
-          height="3587"
-          frameborder="0"
-          marginheight="0"
-          marginwidth="0"
-          loading="lazy"
-          title="Pesquisa de Satisfação Claudinei AI"
-        >Carregando…</iframe>
+
+      <div style={{display:"flex", justifyContent:"center", padding:"0 48px"}}>
+        <div className="stats-section">
+          {[
+            { num: "12", unit: "mil", label: "Escritores ativos", jp: "作家" },
+            { num: "48", unit: "mil", label: "Obras publicadas", jp: "作品" },
+            { num: "200", unit: "+", label: "Comunidades literárias", jp: "コミュニティ" },
+          ].map((s, i) => (
+            <div key={i} className="stat-item">
+              <div className="stat-num">{s.num}<span>{s.unit}</span></div>
+              <div className="stat-label">{s.label}</div>
+              <span className="stat-jp">{s.jp}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-logo">Claudinei <span>AI</span></div>
-    <p>© 2025 Telos AI · Tellos Tecnologia LTDA · Todos os direitos reservados</p>
-  </footer>
+      {/* FEATURES */}
+      <section className="features-section">
+        <div className="section-header">
+          <span className="section-eyebrow">Para quem escreve de verdade</span>
+          <h2 className="section-title">Tudo o que um escritor <em>precisa</em></h2>
+          <p className="section-body">Ferramentas pensadas para a escrita criativa, comunidades que entendem sua voz, conexões que inspiram.</p>
+        </div>
+        <div className="features-grid">
+          {[
+            { icon: "✍️", title: "Perfil de Escritor", jp: "作家プロフィール", desc: "Seu espaço literário completo — obras, pseudônimo, badges conquistados e sua história como escritor.", num: "01" },
+            { icon: "🏘️", title: "Comunidades", jp: "コミュニティ", desc: "Grupos por gênero, estilo e universo literário. Como os fóruns do Orkut, mas feitos para quem vive pelas palavras.", num: "02" },
+            { icon: "📖", title: "Publicação de Obras", jp: "作品投稿", desc: "Poste capítulos, contos e poemas diretamente no seu perfil. Receba feedback da comunidade em tempo real.", num: "03" },
+            { icon: "💬", title: "Recados & Conexões", jp: "メッセージ", desc: "O mural de recados nostálgico do Orkut, reimaginado para escritores que querem trocar referências e elogios.", num: "04" },
+            { icon: "🌙", title: "Feed Literário", jp: "フィード", desc: "Uma linha do tempo dos escritores que você segue — novos capítulos, citações, descobertas e momentos criativos.", num: "05" },
+            { icon: "🏆", title: "Conquistas", jp: "実績", desc: "Badges por obras concluídas, colaborações, anos de comunidade. Sua jornada literária gamificada com elegância.", num: "06" },
+          ].map((f, i) => (
+            <div key={i} className="feature-card">
+              <span className="feature-num">{f.num}</span>
+              <span className="feature-icon">{f.icon}</span>
+              <h3 className="feature-title">{f.title}</h3>
+              <span className="feature-jp">{f.jp}</span>
+              <p className="feature-desc">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-</div>
+      {/* QUOTE */}
+      <section className="quote-section">
+        <div className="quote-bg" />
+        <span className="quote-mark">"</span>
+        <blockquote className="quote-text">
+          Escrever é o único lugar onde você pode ser <em>exatamente</em> quem é —
+          e o Kaku é onde você encontra quem entende isso.
+        </blockquote>
+        <cite className="quote-source">— Comunidade Kaku · 書く</cite>
+      </section>
 
-<script>
-  // Generate floating particles
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.setProperty('--dur', (7 + Math.random() * 10) + 's');
-    p.style.setProperty('--delay', (Math.random() * 10) + 's');
-    p.style.width = p.style.height = (1 + Math.random() * 2.5) + 'px';
-    container.appendChild(p);
-  }
-</script>
-</body>
-</html>
+      {/* HOW IT WORKS */}
+      <section className="how-section">
+        <div className="section-header">
+          <span className="section-eyebrow">Como funciona</span>
+          <h2 className="section-title">Em três passos, <em>você já está em casa</em></h2>
+        </div>
+        <div className="steps">
+          {[
+            { num: "一", title: "Crie seu perfil de escritor", desc: "Escolha seu pseudônimo, escreva sua bio literária, e deixe sua identidade criativa falar por você antes mesmo das suas obras.", tag: "Cadastro gratuito" },
+            { num: "二", title: "Entre nas comunidades certas", desc: "Fantasia, poesia, ficção científica, romance oriental — mais de 200 comunidades esperando pela sua voz. Ou crie a sua própria.", tag: "Comunidades" },
+            { num: "三", title: "Escreva, publique, conecte", desc: "Poste suas obras, receba recados no seu mural, siga escritores que te inspiram. O resto acontece naturalmente.", tag: "Sua jornada literária" },
+          ].map((s, i) => (
+            <div key={i} className="step">
+              <div className="step-num">{s.num}</div>
+              <div className="step-content">
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-desc">{s.desc}</p>
+                <span className="step-tag">{s.tag}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* COMMUNITIES */}
+      <section className="community-section">
+        <div className="section-header" style={{padding:"0 48px", marginBottom:40}}>
+          <span className="section-eyebrow">Explore</span>
+          <h2 className="section-title" style={{fontSize:"clamp(28px,4vw,44px)"}}>Comunidades que <em>respiram literatura</em></h2>
+        </div>
+        <div className="communities-track">
+          {COMMUNITIES.map((c, i) => (
+            <div key={i} className="community-card">
+              <span className="community-emoji">{c.emoji}</span>
+              <div className="community-name">{c.name}</div>
+              <div className="community-count">{c.count}</div>
+              <p className="community-desc">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="cta-section">
+        <div className="cta-bg" />
+        <div className="cta-border">
+          <h2 className="cta-title">
+            Sua história começa <em>aqui</em>
+          </h2>
+          <p className="cta-body">
+            Junte-se a milhares de escritores que já encontraram sua voz —
+            e seus leitores.
+          </p>
+          {!joined ? (
+            <>
+              <div className="cta-input-row">
+                <input
+                  className="cta-input"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+                <button
+                  className="cta-btn"
+                  onClick={() => { if (email.trim()) setJoined(true); }}
+                >Entrar na lista</button>
+              </div>
+              <p className="cta-note">Acesso antecipado · Gratuito · Sem spam</p>
+            </>
+          ) : (
+            <div style={{fontFamily:"var(--font-body)", fontStyle:"italic", fontSize:20, color:"var(--sakura2)", padding:"20px 0"}}>
+              🌸 Perfeito — você está na lista. Em breve, as primeiras palavras.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-logo">
+          Kaku <span>書く · comunidade de escritores</span>
+        </div>
+        <div className="footer-links">
+          {["Sobre", "Privacidade", "Termos", "Contato"].map(l => (
+            <a key={l} className="footer-link">{l}</a>
+          ))}
+        </div>
+        <span className="footer-copy">Feito com tinta e luar</span>
+      </footer>
+    </>
+  );
+}
